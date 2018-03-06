@@ -20,7 +20,7 @@
     
     <!-- Submission Info -->
     <!--<h4>Created by "Your Name" </h4>-->
-      <h4>Tanay Parekhji<br> CMPS263 Geospatial Mapping <br>  <a href="https://github.com/tanaytanay/njpop">github repo</a><br>  <a href="https://tanaytanay.github.io/njpop/">view visualization</a></h4>
+      <h4>Tanay Parekhji<br> CMPS263 Geospatial Mapping <br>  <a href="https://tanaytanay.github.io/njpop">github repo</a><br>  <a href="https://tanaytanay.github.io/njpop/">view visualization</a></h4>
       <svg width="1000" height="1100"></svg><br>
 
       
@@ -121,7 +121,7 @@ d3.json("https://tanaytanay.github.io/njpop/nj-topo.json", function(error, topol
 });
 
 
-d3.json("nj-topo-state.json", function(error, topology) {
+d3.json("https://tanaytanay.github.io/njpop/nj-topo-state.json", function(error, topology) {
           if (error) throw error; 
             state = svg.append("g")
             .append("path")
@@ -133,7 +133,7 @@ d3.json("nj-topo-state.json", function(error, topology) {
               .attr("stroke-width","2.5px") //Change opacity value to toggle 
               .attr("d", path);
         });
-d3.json("nj-topo.json", function(error, topology) {
+d3.json("https://tanaytanay.github.io/njpop/nj-topo.json", function(error, topology) {
           if (error) throw error;   
             tracts = svg.append("g").attr("class",".tracts")
                 .selectAll("path")
@@ -153,7 +153,7 @@ d3.json("nj-topo.json", function(error, topology) {
 
 function toggleTract(){
   
-  d3.json("nj-topo.json", function(error, topology) {
+  d3.json("https://tanaytanay.github.io/njpop/nj-topo.json", function(error, topology) {
     if(document.getElementById("tractButton").value == "on"){
       
       document.getElementById("tractButton").value = "off";
