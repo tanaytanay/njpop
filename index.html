@@ -95,9 +95,9 @@ g.call(d3.axisBottom(x)
         
         function toggleColor(){
 
-          console.log(document.getElementById("njColor").src)
-          if(document.getElementById("njColor").src == "file:///home/tanay/Desktop/geo/nj_red.svg"){
-            document.getElementById("njColor").src = 'nj_blue.svg';
+          
+          if(document.getElementById("njColor").src == "https://tanaytanay.github.io/njpop/nj_red.svg"){
+            document.getElementById("njColor").src = 'https://tanaytanay.github.io/njpop/nj_blue.svg';
 
             var svg = d3.select("svg"),
     width = +svg.attr("width"),
@@ -138,7 +138,7 @@ g.call(d3.axisBottom(x)
     .remove();
           }
           else{
-            document.getElementById("njColor").src = 'nj_red.svg';
+            document.getElementById("njColor").src = 'https://tanaytanay.github.io/njpop/nj_red.svg';
 
             var svg = d3.select("svg"),
     width = +svg.attr("width"),
