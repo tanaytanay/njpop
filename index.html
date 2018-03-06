@@ -11,6 +11,7 @@
     
     <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/topojson.v2.min.js"></script>
 
   </head>
   <body>
@@ -19,11 +20,11 @@
     
     <!-- Submission Info -->
     <!--<h4>Created by "Your Name" </h4>-->
-      <h4>Tanay Parekhji</h4>
-      <img id =  "njColor" src="nj_red.svg">
+      <h4>Tanay Parekhji<br> CMPS263 Geospatial Mapping <br>  <a href="https://github.com/tanaytanay/njpop">github repo</a><br>  <a href="https://tanaytanay.github.io/njpop/">view visualization</a></h4>
       
-<svg width="960" height="100"></svg>
-      <button onclick="toggleColor()  ">Toggle color</button>
+      
+<svg width="1000" height="1100"></svg><br>
+      <button id = "colorButton" onclick="toggleColor()  " value = "red">Toggle color</button>
 
       
 
@@ -47,7 +48,7 @@
   
   <script type="text/javascript">
 
-        var svg = d3.select("svg"),
+          var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
@@ -63,7 +64,81 @@ var x = d3.scaleSqrt()
 
 var g = svg.append("g")
     .attr("class", "key")
-    .attr("transform", "translate(0,40)");
+    .attr("transform", "translate(0,1000)");
+
+g.selectAll("rect")
+  
+  .data(color.range().map(function(d) {
+      d = color.invertExtent(d);
+      if (d[0] == null) d[0] = x.domain()[0];
+      if (d[1] == null) d[1] = x.domain()[1];
+      return d;
+    }))
+  .enter().append("rect")
+    .attr("height", 8)
+    .attr("x", function(d) { return x(d[0]); })
+
+    .attr("width", function(d) { return x(d[1]) - x(d[0]); })
+    .attr("fill", function(d) { return color(d[0]); });
+
+g.append("text")
+    .attr("class", "caption")
+    .attr("x", x.range()[0])
+    .attr("y", -6)
+
+    .attr("fill", "#000")
+    .attr("text-anchor", "start")
+    .attr("font-weight", "bold")
+    .text("Population per square mile");
+
+g.call(d3.axisBottom(x)
+    .tickSize(13)
+    .tickValues(color.domain()))
+  .select(".domain")
+
+    .remove();
+
+d3.json("https://tanaytanay.github.io/njpop/nj-topo.json", function(error, topology) {
+  if (error) throw error;
+
+  svg.append("g")
+  
+    .selectAll("path")
+    .data(topojson.feature(topology, topology.objects.tracts).features)
+    .enter().append("path")
+      .attr("fill", function(d) { return color(d.properties.density); })
+      .attr("d", path);
+
+  svg.append("path")
+      
+      .datum(topojson.feature(topology, topology.objects.counties))
+      .attr("fill", "none")
+      .attr("stroke", "#000")
+      .attr("stroke-opacity", 0.3)
+      .attr("d", path);
+});
+        function toggleColor(){
+
+          
+          if(document.getElementById("colorButton").value == "red"){
+            document.getElementById("colorButton").value = "blue"
+            var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+var path = d3.geoPath();
+
+var color = d3.scaleThreshold()
+    .domain([1, 10, 50, 200, 500, 1000, 2000, 4000])
+    .range(d3.schemeBuGn[9]);
+
+var x = d3.scaleSqrt()
+    .domain([0, 4500])
+    .rangeRound([440, 950]);
+
+var g = svg.append("g")
+    .attr("class", "key")
+    .attr("transform", "translate(0,1000)");
 
 g.selectAll("rect")
   .data(color.range().map(function(d) {
@@ -92,58 +167,34 @@ g.call(d3.axisBottom(x)
     .tickValues(color.domain()))
   .select(".domain")
     .remove();
-        
-        function toggleColor(){
 
-          
-          if(document.getElementById("njColor").src == "https://tanaytanay.github.io/njpop/nj_red.svg"){
-            document.getElementById("njColor").src = 'https://tanaytanay.github.io/njpop/nj_blue.svg';
+d3.json("https://tanaytanay.github.io/njpop/nj-topo.json", function(error, topology) {
+  if (error) throw error;
 
-            var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
+  svg.append("g")
+  
+    .selectAll("path")
+    .data(topojson.feature(topology, topology.objects.tracts).features)
+    .enter().append("path")
+      .attr("fill", function(d) { return color(d.properties.density); })
+      .attr("d", path);
 
-
-var color = d3.scaleThreshold()
-    .domain([1, 10, 50, 200, 500, 1000, 2000, 4000])
-    .range(d3.schemeBuGn[9]);
-
-var x = d3.scaleSqrt()
-    .domain([0, 4500])
-    .rangeRound([440, 950]);
-
-var g = svg.append("g")
-    .attr("class", "key")
-    .attr("transform", "translate(0,40)");
-
-g.selectAll("rect")
-  .data(color.range().map(function(d) {
-      d = color.invertExtent(d);
-      if (d[0] == null) d[0] = x.domain()[0];
-      if (d[1] == null) d[1] = x.domain()[1];
-      return d;
-    }))
-  .enter().append("rect")
-    .attr("height", 8)
-    .attr("x", function(d) { return x(d[0]); })
-    .attr("width", function(d) { return x(d[1]) - x(d[0]); })
-    .attr("fill", function(d) { return color(d[0]); });
-
-
-
-g.call(d3.axisBottom(x)
-    .tickSize(13)
-    .tickValues(color.domain()))
-    .select(".domain")
-    .remove();
+  svg.append("path")
+      .datum(topojson.feature(topology, topology.objects.counties))
+      .attr("fill", "none")
+      .attr("stroke", "#000")
+      .attr("stroke-opacity", 0.3)
+      .attr("d", path);
+});
           }
           else{
-            document.getElementById("njColor").src = 'https://tanaytanay.github.io/njpop/nj_red.svg';
+            document.getElementById("colorButton").value = "red";
 
             var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
+var path = d3.geoPath();
 
 var color = d3.scaleThreshold()
     .domain([1, 10, 50, 200, 500, 1000, 2000, 4000])
@@ -155,7 +206,7 @@ var x = d3.scaleSqrt()
 
 var g = svg.append("g")
     .attr("class", "key")
-    .attr("transform", "translate(0,40)");
+    .attr("transform", "translate(0,1000)");
 
 g.selectAll("rect")
   .data(color.range().map(function(d) {
@@ -170,13 +221,39 @@ g.selectAll("rect")
     .attr("width", function(d) { return x(d[1]) - x(d[0]); })
     .attr("fill", function(d) { return color(d[0]); });
 
-
+g.append("text")
+    .attr("class", "caption")
+    .attr("x", x.range()[0])
+    .attr("y", -6)
+    .attr("fill", "#000")
+    .attr("text-anchor", "start")
+    .attr("font-weight", "bold")
+    .text("Population per square mile");
 
 g.call(d3.axisBottom(x)
     .tickSize(13)
     .tickValues(color.domain()))
-    .select(".domain")
+  .select(".domain")
     .remove();
+
+d3.json("https://tanaytanay.github.io/njpop/nj-topo.json", function(error, topology) {
+  if (error) throw error;
+
+  svg.append("g")
+  
+    .selectAll("path")
+    .data(topojson.feature(topology, topology.objects.tracts).features)
+    .enter().append("path")
+      .attr("fill", function(d) { return color(d.properties.density); })
+      .attr("d", path);
+
+  svg.append("path")
+      .datum(topojson.feature(topology, topology.objects.counties))
+      .attr("fill", "none")
+      .attr("stroke", "#000")
+      .attr("stroke-opacity", 0.3)
+      .attr("d", path);
+});
           }
         }
       </script>
