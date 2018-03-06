@@ -1,0 +1,51 @@
+geoproject 'd3.geoTransverseMercator()  .rotate([74 + 30 / 60, -38 - 50 / 60]).fitSize([960, 960], d)' < nj.json > nj-merc.json
+
+geo2svg -w 960 -h 960 < nj-merc.json > nj-merc.svg
+
+ndjson-split 'd.features'  < nj-merc.json  > nj-merc.ndjson
+
+ndjson-map 'd.id = d.properties.GEOID.slice(2), d'   < nj-merc.ndjson   > nj-merc-id.ndjson
+
+curl 'http://api.census.gov/data/2016/acs/acs5?get=B01003_001E&for=tract:*&in=state:34&key=521cfa1b9df32d43bd6c619cb5a434c59b46aa13' -o B01003.json
+
+ndjson-njt B01003.json   | ndjson-split 'd.slice(1)'   | ndjson-map '{id: d[2] + d[3], B01003: +d[0]}'   > B01003.ndjson
+
+ndjson-join 'd.id'   nj-merc-id.ndjson   B01003.ndjson   > nj-merc-join.ndjson
+
+ndjson-map 'd[0].properties = {density: Math.floor(d[1].B01003 / d[0].properties.ALAND * 2589975.2356)}, d[0]'   < nj-merc-join.ndjson   > nj-merc-density.ndjson
+
+ndjson-reduce   < nj-merc-density.ndjson   | ndjson-map '{type: "FeatureCollection", features: d}'   > nj-merc-density.json
+
+ndjson-map -r d3   '(d.properties.fill = d3.scaleSequential(d3.interpolateViridis).domain([0, 4000])(d.properties.density), d)'   < nj-merc-density.ndjson   > nj-merc-color.ndjson
+
+geo2svg -n --stroke none -p 1 -w 960 -h 960   < nj-merc-color.ndjson   > nj-merc-color.svg
+
+
+-----
+
+
+geo2topo -n   tracts=nj-merc-density.ndjson   > nj-tracts-topo.json
+
+toposimplify -p 1 -f  < nj-tracts-topo.json  > nj-simple-topo.json
+
+topoquantize 1e5  < nj-simple-topo.json  > nj-quantized-topo.json
+
+topomerge -k 'd.id.slice(0, 3)' counties=tracts  < nj-quantized-topo.json  > nj-merge-topo.json
+
+topomerge --mesh -f 'a !== b' counties=counties  < nj-merge-topo.json  > nj-topo.json
+
+---------
+
+topo2geo tracts=-   < nj-topo.json   | ndjson-map -r d3 'z = d3.scaleSequential(d3.interpolateViridis).domain([0, 4000]), d.features.forEach(f => f.properties.fill = z(f.properties.density)), d'   | ndjson-split 'd.features'   | geo2svg -n --stroke none -p 1 -w 960 -h 960   > nj-tracts-color.svg
+
+
+topo2geo tracts=-   < nj-topo.json   | ndjson-map -r d3 'z = d3.scaleSequential(d3.interpolateViridis).domain([0, 100]), d.features.forEach(f => f.properties.fill = z(Math.sqrt(f.properties.density))), d'   | ndjson-split 'd.features'   | geo2svg -n --stroke none -p 1 -w 960 -h 960   > nj-tracts-sqrt.svg
+
+topo2geo tracts=-   < nj-topo.json   | ndjson-map -r d3 'z = d3.scaleLog().domain(d3.extent(d.features.filter(f => f.properties.density), f => f.properties.density)).interpolate(() => d3.interpolateViridis), d.features.forEach(f => f.properties.fill = z(f.properties.density)), d'   | ndjson-split 'd.features'   | geo2svg -n --stroke none -p 1 -w 960 -h 960   > nj-tracts-log.svg
+
+
+topo2geo tracts=-   < nj-topo.json   | ndjson-map -r d3 'z = d3.scaleQuantile().domain(d.features.map(f => f.properties.density)).range(d3.quantize(d3.interpolateViridis, 256)), d.features.forEach(f => f.properties.fill = z(f.properties.density)), d'   | ndjson-split 'd.features'   | geo2svg -n --stroke none -p 1 -w 960 -h 960   > nj-tracts-quantile.svg
+
+topo2geo tracts=-   < nj-topo.json   | ndjson-map -r d3 -r d3=d3-scale-chromatic 'z = d3.scaleThreshold().domain([0, 10, 50, 200, 500, 1000, 2000, 4000]).range(d3.schemeBuGn[9]), d.features.forEach(f => f.properties.fill = z(f.properties.density)), d'   | ndjson-split 'd.features'   | geo2svg -n --stroke none -p 1 -w 960 -h 960   > nj-tracts-threshold-blue.svg
+
+(topo2geo tracts=-     < nj-topo.json     | ndjson-map -r d3 -r d3=d3-scale-chromatic 'z = d3.scaleThreshold().domain([0, 10, 50, 200, 500, 1000, 2000, 4000]).range(d3.schemeBuGn[9]), d.features.forEach(f => f.properties.fill = z(f.properties.density)), d'     | ndjson-split 'd.features'; topo2geo counties=-     < nj-topo.json     | ndjson-map 'd.properties = {"stroke": "#000", "stroke-opacity": 0.3}, d')  | geo2svg -n --stroke none -p 1 -w 960 -h 960   > nj_blue.svg
